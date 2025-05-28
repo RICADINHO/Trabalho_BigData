@@ -1,0 +1,4 @@
+[2025-05-27 21:23:34,364] INFO [Broker id=1] Transitioning 2 partition(s) to local followers. (state.change.logger)
+[2025-05-27 21:23:35,844] INFO [Broker id=1] Follower books-amazon-0 starts at leader epoch 5 from offset 3479 with partition epoch 5 and high watermark 3479. Current leader is -1. Previous leader Some(-1) and previous leader epoch was 5. (state.change.logger)
+[2025-05-27 21:23:36,067] INFO [Broker id=1] Follower flights-0 starts at leader epoch 1 from offset 0 with partition epoch 1 and high watermark 0. Current leader is -1. Previous leader Some(-1) and previous leader epoch was 1. (state.change.logger)
+[2025-05-27 21:23:37,063] INFO [Broker id=1] Stopped fetchers as part of controlled shutdown for 2 partitions (state.change.logger)
