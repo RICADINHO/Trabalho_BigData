@@ -102,9 +102,72 @@ def get_table_dataframe(spark, table):
     df_kafka = (df_kafka
                 .withColumn('jsonvalue', udf_value_json(F.col('value')))
                 .withColumn('Year', F.get_json_object(F.col('jsonvalue'), '$.Year'))
+                .withColumn('Quarter', F.get_json_object(F.col('jsonvalue'), '$.Quarter'))
+                .withColumn('Month', F.get_json_object(F.col('jsonvalue'), '$.Month'))
+                .withColumn('DayOfWeek', F.get_json_object(F.col('jsonvalue'), '$.DayOfWeek'))
+                .withColumn('Operated_or_Branded_Code_Share_Partners', F.get_json_object(F.col('jsonvalue'), '$.Operated_or_Branded_Code_Share_Partners'))
                 .withColumn('Operating_Airline', F.get_json_object(F.col('jsonvalue'), '$.Operating_Airline'))
-              
+                .withColumn('Flight_Number_Operating_Airline', F.get_json_object(F.col('jsonvalue'), '$.Flight_Number_Operating_Airline'))
+                .withColumn('CRSDepTime', F.get_json_object(F.col('jsonvalue'), '$.CRSDepTime'))
+                .withColumn('DepTime', F.get_json_object(F.col('jsonvalue'), '$.DepTime'))
+                .withColumn('TaxiOut', F.get_json_object(F.col('jsonvalue'), '$.TaxiOut'))
+                .withColumn('WheelsOff', F.get_json_object(F.col('jsonvalue'), '$.WheelsOff'))
+                .withColumn('WheelsOn', F.get_json_object(F.col('jsonvalue'), '$.WheelsOn'))
+                .withColumn('TaxiIn', F.get_json_object(F.col('jsonvalue'), '$.TaxiIn'))
+                .withColumn('CRSElapsedTime', F.get_json_object(F.col('jsonvalue'), '$.CRSElapsedTime'))
+                .withColumn('ActualElapsedTime', F.get_json_object(F.col('jsonvalue'), '$.ActualElapsedTime'))
+                .withColumn('AirTime', F.get_json_object(F.col('jsonvalue'), '$.AirTime'))
+                .withColumn('Distance', F.get_json_object(F.col('jsonvalue'), '$.Distance'))
+                .withColumn('DistanceGroup', F.get_json_object(F.col('jsonvalue'), '$.DistanceGroup'))
+                .withColumn('OriginCityNameState', F.get_json_object(F.col('jsonvalue'), '$.OriginCityNameState'))
+                .withColumn('DestCityNameState', F.get_json_object(F.col('jsonvalue'), '$.DestCityNameState'))
+                .withColumn('Origin', F.get_json_object(F.col('jsonvalue'), '$.Origin'))
+                .withColumn('Dest', F.get_json_object(F.col('jsonvalue'), '$.Dest'))
+
+                .withColumn('DepDelay', F.get_json_object(F.col('jsonvalue'), '$.DepDelay'))
+                .withColumn('CRSArrTime', F.get_json_object(F.col('jsonvalue'), '$.CRSArrTime'))
+                .withColumn('ArrTime', F.get_json_object(F.col('jsonvalue'), '$.ArrTime'))
+                .withColumn('ArrDelay', F.get_json_object(F.col('jsonvalue'), '$.ArrDelay'))
      )
+    
+    df_kafka = df_kafka.drop("value")
+    df_kafka = df_kafka.drop("topic")
+    df_kafka = df_kafka.drop("timestamp")
+    df_kafka = df_kafka.drop("jsonvalue")
+
+    df_kafka = (df_kafka
+        .withColumn('Year', df_kafka["Year"].cast("integer"))
+        .withColumn('Quarter', df_kafka["Quarter"].cast("integer"))
+        .withColumn('Month', df_kafka["Month"].cast("integer"))
+        .withColumn('DayOfWeek', df_kafka["DayOfWeek"].cast("integer"))
+        .withColumn('Operated_or_Branded_Code_Share_Partners', df_kafka["Operated_or_Branded_Code_Share_Partners"].cast("string"))
+        .withColumn('Operating_Airline', df_kafka["Operating_Airline"].cast("string"))
+        .withColumn('Flight_Number_Operating_Airline', df_kafka["Flight_Number_Operating_Airline"].cast("integer"))
+        .withColumn('Origin', df_kafka["Origin"].cast("string"))
+        .withColumn('Dest', df_kafka["Dest"].cast("string"))
+        .withColumn('CRSDepTime', df_kafka["CRSDepTime"].cast("integer"))
+        .withColumn('DepTime', df_kafka["DepTime"].cast("integer"))
+        .withColumn('TaxiOut', df_kafka["TaxiOut"].cast("double"))
+        .withColumn('WheelsOff', df_kafka["WheelsOff"].cast("integer"))
+        .withColumn('WheelsOn', df_kafka["WheelsOn"].cast("integer"))
+        .withColumn('TaxiIn', df_kafka["TaxiIn"].cast("double"))
+        .withColumn('CRSElapsedTime', df_kafka["CRSElapsedTime"].cast("double"))
+        .withColumn('ActualElapsedTime', df_kafka["ActualElapsedTime"].cast("double"))
+        .withColumn('AirTime', df_kafka["AirTime"].cast("double"))
+        .withColumn('Distance', df_kafka["Distance"].cast("double"))
+        .withColumn('DistanceGroup', df_kafka["DistanceGroup"].cast("integer"))
+        .withColumn('OriginCityNameState', df_kafka["OriginCityNameState"].cast("string"))
+        .withColumn('DestCityNameState', df_kafka["DestCityNameState"].cast("string"))
+
+        .withColumn('DepDelay', df_kafka["DepDelay"].cast("integer"))
+        .withColumn('CRSArrTime', df_kafka["CRSArrTime"].cast("integer"))
+        .withColumn('ArrTime', df_kafka["ArrTime"].cast("integer"))
+        .withColumn('ArrDelay', df_kafka["ArrDelay"].cast("integer"))
+
+    )
+
+
+    df_kafka = df_kafka.withColumn("Tem_ArrDelay", F.when(df_kafka["ArrDelay"]>5,1).otherwise(0))
     
     return df_kafka
 
