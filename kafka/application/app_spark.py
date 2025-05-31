@@ -18,7 +18,6 @@ table = 'flight'
 # Showing results of data stream processing
 def show_spark_results(spark, table):
     df = get_table_dataframe(spark, table)
-    # cols_interest = ['timestamp','Asin','Group','Format','Title','Author','Publisher']
     
     sleeptime = 3
     maxiterations = 5
@@ -32,13 +31,6 @@ def show_spark_results(spark, table):
         print(f'\n\n\nIteração numero {i+1}/{maxiterations}:')
         print(f'Numero de dados processados até agora: {df.count()}\n')
 
-        #df.select(cols_interest).show(truncate=False)
-        #df.show(5, truncate=False)
-        #show_sink_table(spark, table)
-        #df.printSchema()
-        #df.show(2)
-
-
         df_modelo = df.drop(*["DepDelay","ArrDelay","Tem_ArrDelay","CRSArrTime","ArrTime"])
         previsao = modelo.transform(df_modelo)
 
@@ -49,15 +41,7 @@ def show_spark_results(spark, table):
         for j in range(0,len(previsoes)):
             print(f"Previsao: {previsoes[j][1]}, Valor real: {real[j][1]} ")
 
-
-        #print('Aggregated information as it stands (top 20):')
-        #df.groupBy('Year').count().orderBy('count', ascending=False).show(truncate=False)
-        #df.groupBy('Operating_Airline').count().orderBy('count', ascending=False).show(truncate=False)
-        #df.groupBy('Group', 'Format').count().show(truncate=False)
         
-
-# Execution
-
 spark = spark_initialize()
 query = data_stream_spark(spark, brokers, topic, table)
 
