@@ -1,6 +1,8 @@
 # Trabalho final de Algoritmos para Big Data
 
+## Dataset:
 
+https://www.kaggle.com/datasets/robikscube/flight-delay-dataset-20182022?select=raw
 
 ## Inicializar o kafka:
 
