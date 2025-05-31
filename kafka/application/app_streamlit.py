@@ -6,6 +6,8 @@ from pyspark.ml.tuning import TrainValidationSplitModel
 from data_streaming import ( spark_initialize, data_stream_spark, 
                 show_tables, show_status, get_table_dataframe )
 from pyspark.sql.functions import monotonically_increasing_id
+import plotly.express as px
+
 
 # Caching the function that will access the running 
 # Spark/Kafka data query (a DataFrame)
@@ -38,38 +40,51 @@ def results():
 
         status_text.warning(f'A processar...  Iteração numero {i+1}/{maxiterations}. Numero de dados processados até agora: {df.count()}.')
 
-
-
         df_author = df.groupBy('Tem_ArrDelay').count().orderBy('count', ascending=False).limit(20).toPandas()
+        df_author['Tem_ArrDelay'] = df_author['Tem_ArrDelay'].replace({0: 'Não', 1: 'Sim'})
 
-        # trocar estes dois \/
-        df_delay = df.groupBy('Tem_ArrDelay').count().orderBy('count', ascending=False).limit(20).toPandas()
-        #df_prev = previsao.groupBy('prediction').count().orderBy('count', ascending=False).limit(20).toPandas()
-
+        # Novo gráfico: delays por dia da semana (Tem_ArrDelay == 1)
+        df_delay = df.filter(df.Tem_ArrDelay == 1)
+        df_dayofweek = df_delay.groupBy('DayOfWeek').count().orderBy('DayOfWeek').toPandas()
+        dias_semana = {
+            1: 'Segunda', 2: 'Terça', 3: 'Quarta',
+            4: 'Quinta', 5: 'Sexta', 6: 'Sábado', 7: 'Domingo'
+        }
+        df_dayofweek['DayOfWeek'] = df_dayofweek['DayOfWeek'].map(dias_semana)
 
         with placeholder.container():
+            # Organizar os dois gráficos em colunas
+            col1, col2 = st.columns(2)
 
-            # Each chart in one column, so two columns required
-            fig_col1, fig_col2 = st.columns(2)
-            with fig_col1:
+            with col1:
                 st.markdown('### Delay entre voos')
-                st.markdown(f'**Distribuição do delay dos aviões no dataset**')
-                st.bar_chart(data=df_author, y='count', x='Tem_ArrDelay', use_container_width=True)
+                fig1 = px.bar(
+                    df_author,
+                    x='Tem_ArrDelay',
+                    y='count',
+                    color='Tem_ArrDelay',
+                    labels={'Tem_ArrDelay': 'Delay?', 'count': 'Quantidade'},
+                    title='Distribuição real de delays no dataset',
+                    color_discrete_map={'Sim': 'red', 'Não': 'green'}
+                )
+                st.plotly_chart(fig1, use_container_width=True)
 
-            with fig_col2:
-                st.markdown('### Previsões do Delay')
-                st.markdown('**Distribuição das previsões do delay feitas pelo modelo**')
-                # trocar estes dois \/
-                st.bar_chart(data=df_delay, y='count', x='Tem_ArrDelay', use_container_width=True)
-                #st.bar_chart(data=df_prev, y='count', x='prediction', use_container_width=True)
+            with col2:
+                st.markdown('### Delays por dia da semana (somente registros com delay)')
+                fig2 = px.bar(
+                    df_dayofweek,
+                    x='DayOfWeek',
+                    y='count',
+                    labels={'DayOfWeek': 'Dia da Semana', 'count': 'Quantidade de Delays'},
+                    title='Distribuição de delays (Tem_ArrDelay == 1) por dia da semana',
+                    color='DayOfWeek'
+                )
+                st.plotly_chart(fig2, use_container_width=True)
 
-
-            # Show the related dataframes
+            # Mostrar os dataframes
             st.markdown('### Detailed tables view')
             st.markdown('**Dados a ser recebidos**')
             st.dataframe(df)
-            #st.markdown('**Dados recebidos**')
-            #st.dataframe(df.select('Tem_ArrDelay').tail(5))
             st.markdown('**Previsoes recebidas em realtime**')
             st.dataframe(previsao.select('prediction').tail(5))
     
