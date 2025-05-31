@@ -1,9 +1,11 @@
 import streamlit as st
 import time
-
+import pandas as pd
+from pyspark.ml.tuning import TrainValidationSplitModel
 # Importing critical functions that deal with data stream (Spark/Kafka side)
 from data_streaming import ( spark_initialize, data_stream_spark, 
                 show_tables, show_status, get_table_dataframe )
+from pyspark.sql.functions import monotonically_increasing_id
 
 # Caching the function that will access the running 
 # Spark/Kafka data query (a DataFrame)
@@ -21,58 +23,76 @@ def results():
     status_text = st.empty()
     progress_bar = st.progress(0)
     placeholder = st.empty()
-    sleeptime = 0.8
+    sleeptime = 2
     maxiterations = 30
-    top_authors = 40
+
+    modelo = TrainValidationSplitModel.load("../../modelo")
 
     # Iterative update
     for i in range(maxiterations):
         time.sleep(sleeptime)
         # getting data at this point in time
         df = get_data()
-        count = df.count()
-        status_text.warning(f'Processing...  Iteration {i} with in-between delay of {sleeptime} second(s). Messages/records processed so far: {count}.')
-        cols1 = ['Year']
-        cols2 = ['Tem_ArrDelay']
-        df_temdelay = df.select(cols2).tail(5)
-        df_author = df.groupBy(cols1).count().orderBy('count', ascending=False).limit(top_authors).toPandas()
-  
+        df_modelo = df.drop(*["DepDelay","ArrDelay","Tem_ArrDelay","CRSArrTime","ArrTime"])
+        previsao = modelo.transform(df_modelo)
+
+        status_text.warning(f'A processar...  Iteração numero {i+1}/{maxiterations}. Numero de dados processados até agora: {df.count()}.')
+
+
+
+        df_author = df.groupBy('Tem_ArrDelay').count().orderBy('count', ascending=False).limit(20).toPandas()
+
+        # trocar estes dois \/
+        df_delay = df.groupBy('Tem_ArrDelay').count().orderBy('count', ascending=False).limit(20).toPandas()
+        #df_prev = previsao.groupBy('prediction').count().orderBy('count', ascending=False).limit(20).toPandas()
+
 
         with placeholder.container():
 
             # Each chart in one column, so two columns required
             fig_col1, fig_col2 = st.columns(2)
             with fig_col1:
-                st.markdown('### Flights')
-                st.markdown(f'**Counting of books by author - Top {top_authors}**')
-                st.bar_chart(data=df_author, y='count', x=cols1[0], horizontal=True)
-           
+                st.markdown('### Delay entre voos')
+                st.markdown(f'**Distribuição do delay dos aviões no dataset**')
+                st.bar_chart(data=df_author, y='count', x='Tem_ArrDelay', use_container_width=True)
+
+            with fig_col2:
+                st.markdown('### Previsões do Delay')
+                st.markdown('**Distribuição das previsões do delay feitas pelo modelo**')
+                # trocar estes dois \/
+                st.bar_chart(data=df_delay, y='count', x='Tem_ArrDelay', use_container_width=True)
+                #st.bar_chart(data=df_prev, y='count', x='prediction', use_container_width=True)
+
 
             # Show the related dataframes
             st.markdown('### Detailed tables view')
-            st.markdown('**Author**')
-            st.dataframe(df_author)
-            st.dataframe(df_temdelay)
+            st.markdown('**Dados a ser recebidos**')
+            st.dataframe(df)
+            #st.markdown('**Dados recebidos**')
+            #st.dataframe(df.select('Tem_ArrDelay').tail(5))
+            st.markdown('**Previsoes recebidas em realtime**')
+            st.dataframe(previsao.select('prediction').tail(5))
     
         progress_bar.progress(i)
   
     progress_bar.empty()
-    status_text.success(f'Final results are shown after processing {count} messages/records.')
+    status_text.success(f'Resultados finais ao fim de processar {df.count()} dados.')
 
 # Page to hold results
 def page_results():
     st.empty()
-    st.header(':one: Data stream processing')
+    st.header('Data streaming')
     st.subheader('Results')
     results()
     
 # Page to hold information about the app
 def page_about():
     st.empty()
-    st.header(':two: About')
-    st.subheader('Lab class handout #6')
-    st.write('Data streaming with Apache Spark and Apache Kafka')
-    st.badge('Streamlit version', icon='ℹ️', color='blue')
+    st.header('Projeto final de Algoritmos para Big Data')
+    st.subheader('Realizado por:')
+    st.write('Bruno Ramos, 127521 ')
+    st.write('Sara Esmeraldo, 129233')
+    st.write('Vicente Chã, 127688')
     
 # Entry point
 def main():

@@ -1,7 +1,6 @@
 import time
 #from pyspark.sql import SparkSession
 from pyspark.ml.tuning import TrainValidationSplitModel
-from pyspark.sql.functions import monotonically_increasing_id
 
 
 
@@ -22,32 +21,34 @@ def show_spark_results(spark, table):
     # cols_interest = ['timestamp','Asin','Group','Format','Title','Author','Publisher']
     
     sleeptime = 3
-    maxiterations = 30
+    maxiterations = 5
 
     modelo = TrainValidationSplitModel.load("../../modelo")
     print("modelo randomforest carregado")
-
+    print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
     # Iterative update
     for i in range(maxiterations):
         time.sleep(sleeptime)
-        print(f'Processing...  Iteration {i} with in-between delay of {sleeptime} second(s)')
-        print(f'Number of records processed so far: {df.count()}.')
+        print(f'\n\n\nIteração numero {i+1}/{maxiterations}:')
+        print(f'Numero de dados processados até agora: {df.count()}\n')
 
         #df.select(cols_interest).show(truncate=False)
         #df.show(5, truncate=False)
         #show_sink_table(spark, table)
-        df.printSchema()
+        #df.printSchema()
         #df.show(2)
 
+
         df_modelo = df.drop(*["DepDelay","ArrDelay","Tem_ArrDelay","CRSArrTime","ArrTime"])
-
         previsao = modelo.transform(df_modelo)
-        #previsao.select("features", "prediction").show()
-        #previsao.join(previsao,df_modelo["Tem_ArrDelay"])
-        previsoes = previsao.select("features", "prediction").tail(10)
 
-        for j in previsoes:
-            print(j)
+        previsoes = previsao.select("features", "prediction").tail(10)
+        real = df.select("ArrDelay","Tem_ArrDelay").tail(10)
+
+        print("Valores das previsões do delay para os novos dados lidos:\n")
+        for j in range(0,len(previsoes)):
+            print(f"Previsao: {previsoes[j][1]}, Valor real: {real[j][1]} ")
+
 
         #print('Aggregated information as it stands (top 20):')
         #df.groupBy('Year').count().orderBy('count', ascending=False).show(truncate=False)
@@ -64,3 +65,13 @@ show_status(spark, query)
 show_tables(spark)
 show_sink_table(spark, table)
 show_spark_results(spark, table)
+
+
+
+print("\n\n\n\n\n\n\n\n\n")
+print("+-------------------------------------------------------------------------+")
+print("|                                                                         |")
+print("|                           STREAMING TERMINADO                           |")
+print("|                                                                         |")
+print("+-------------------------------------------------------------------------+")
+print("\n\n\n\n\n\n\n\n\n")

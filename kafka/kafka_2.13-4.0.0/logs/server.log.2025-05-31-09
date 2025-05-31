@@ -1,0 +1,3 @@
+[2025-05-29 19:04:42,955] INFO [NodeToControllerChannelManager id=1 name=registration] Node 1 disconnected. (org.apache.kafka.clients.NetworkClient)
+[2025-05-29 19:14:31,414] INFO [LocalLog partition=__cluster_metadata-0, dir=/tmp/kraft-combined-logs/__cluster_metadata-0] Rolled new log segment at offset 13852 in 2 ms. (org.apache.kafka.storage.internals.log.LocalLog)
+[2025-05-29 19:14:31,416] INFO [ProducerStateManager partition=__cluster_metadata-0] Wrote producer snapshot at offset 13852 with 0 producer ids in 1 ms. (org.apache.kafka.storage.internals.log.ProducerStateManager)
